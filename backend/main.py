@@ -7,6 +7,8 @@ import re
 SPARQL_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/sparql"
 UPDATE_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/update"
 NS = "http://www.semanticweb.org/tsong44/brxgen#"
+print("USING SPARQL_ENDPOINT =", SPARQL_ENDPOINT)
+
 
 app = FastAPI()
 
