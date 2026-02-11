@@ -124,7 +124,31 @@ export default function App() {
     setLoadedIndividuals(new Set());
   }
 
-  async function askQuestion() {
+  // async function askQuestion() {
+  //   if (!question.trim()) {
+  //     alert("Please enter a question");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   setQueryResults(null);
+  //   setSparqlQuery("");
+
+  //   try {
+  //     const response = await axios.post(`${API}/query`, {
+  //       question: question
+  //     });
+
+  //     setSparqlQuery(response.data.sparql_query || "");
+  //     setQueryResults(response.data.results || []);
+  //   } catch (error) {
+  //     console.error("Error querying knowledge graph:", error);
+  //     alert("Error processing query. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
+    async function askQuestion() {
     if (!question.trim()) {
       alert("Please enter a question");
       return;
@@ -135,28 +159,64 @@ export default function App() {
     setSparqlQuery("");
 
     try {
-      const response = await axios.post(`${API}/query`, {
-        question: question
+      // IMPORTANT: Send as query parameter, not body
+      const response = await axios.post(`${API}/query`, null, {
+        params: { 
+          question: question 
+        }
       });
+
+      console.log("Response:", response.data); // Debug log
 
       setSparqlQuery(response.data.sparql_query || "");
       setQueryResults(response.data.results || []);
+      
+      // Show error if present
+      if (response.data.error) {
+        alert(`Query Error: ${response.data.error}`);
+      }
     } catch (error) {
       console.error("Error querying knowledge graph:", error);
-      alert("Error processing query. Please try again.");
+      console.error("Error details:", error.response?.data); // More detailed error
+      alert(`Error processing query: ${error.response?.data?.detail || error.message}`);
     } finally {
       setIsLoading(false);
     }
   }
 
-  function formatResult(result) {
+  // function formatResult(result) {
+  //   // Format result like: Karan --[enrolledCourse]--> NL
+  //   if (result.subject && result.predicate && result.object) {
+  //     const subjectName = result.subject.split("#").pop().split("/").pop();
+  //     const predicateName = result.predicate.split("#").pop().split("/").pop();
+  //     const objectName = result.object.split("#").pop().split("/").pop();
+  //     return `${subjectName} --[${predicateName}]--> ${objectName}`;
+  //   }
+  //   // Fallback for other result formats
+  //   return JSON.stringify(result);
+  // }
+    function formatResult(result) {
+    // Helper to extract readable name from URI or return literal value
+    const formatValue = (value) => {
+      if (!value) return "N/A";
+      
+      // If it's a URI, extract the local name
+      if (value.startsWith("http://") || value.startsWith("https://")) {
+        return value.split("#").pop().split("/").pop().replace(/_/g, " ");
+      }
+      
+      // Otherwise it's a literal value, return as-is
+      return value;
+    };
+
     // Format result like: Karan --[enrolledCourse]--> NL
     if (result.subject && result.predicate && result.object) {
-      const subjectName = result.subject.split("#").pop().split("/").pop();
-      const predicateName = result.predicate.split("#").pop().split("/").pop();
-      const objectName = result.object.split("#").pop().split("/").pop();
+      const subjectName = formatValue(result.subject);
+      const predicateName = formatValue(result.predicate);
+      const objectName = formatValue(result.object);
       return `${subjectName} --[${predicateName}]--> ${objectName}`;
     }
+    
     // Fallback for other result formats
     return JSON.stringify(result);
   }
@@ -327,35 +387,28 @@ export default function App() {
             </button>
 
             {/* Results Section */}
-            {(queryResults !== null || sparqlQuery || isLoading) && (
-              <div className="result-container">
-                {isLoading ? (
-                  <div className="loading">Processing your question...</div>
-                ) : (
-                  <>
-                    {sparqlQuery && (
-                      <div>
-                        <div className="result-header">Generated SPARQL Query:</div>
-                        <div className="sparql-query">{sparqlQuery}</div>
-                      </div>
-                    )}
-                    
-                    {queryResults && queryResults.length > 0 ? (
-                      <div style={{ marginTop: '15px' }}>
-                        <div className="result-header">Results ({queryResults.length}):</div>
-                        {queryResults.map((result, index) => (
-                          <div key={index} className="result-item">
-                            {formatResult(result)}
-                          </div>
-                        ))}
-                      </div>
-                    ) : queryResults && queryResults.length === 0 ? (
-                      <div className="no-results">No results found</div>
-                    ) : null}
-                  </>
-                )}
-              </div>
-            )}
+              {(queryResults !== null || isLoading) && (
+                <div className="result-container">
+                  {isLoading ? (
+                    <div className="loading">Processing your question...</div>
+                  ) : (
+                    <>
+                      {queryResults && queryResults.length > 0 ? (
+                        <div>
+                          <div className="result-header">📋 Answer:</div>
+                          {queryResults.map((result, index) => (
+                            <div key={index} className="result-item">
+                              {formatResult(result)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : queryResults && queryResults.length === 0 ? (
+                        <div className="no-results">No results found for your question</div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              )}
           </div>
         </div>
       </div>
