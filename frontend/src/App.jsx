@@ -3,7 +3,7 @@ import axios from "axios";
 import CytoscapeComponent from "react-cytoscapejs";
 import "./App.css";
 
-const API = "https://knowledgegraphbrx.onrender.com";
+const API = "https://brx.onrender.com";
 const NS = "http://www.semanticweb.org/tsong44/brxgen#";
 
 export default function App() {
