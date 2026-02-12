@@ -7,11 +7,11 @@ import re
 # Use environment variables with fallback
 SPARQL_ENDPOINT = os.getenv(
     "SPARQL_ENDPOINT",
-    "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/sparql"
+    "https://subformative-barer-garret.ngrok-free.dev/brx/sparql"
 )
 UPDATE_ENDPOINT = os.getenv(
     "UPDATE_ENDPOINT", 
-    "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/update"
+    "https://subformative-barer-garret.ngrok-free.dev/brx/update"
 )
 NS = os.getenv("NAMESPACE", "http://www.semanticweb.org/tsong44/brxgen#")
 
