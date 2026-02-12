@@ -1,13 +1,33 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 import re
 
-# CHANGE THESE IF NEEDED
-SPARQL_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/sparql"
-UPDATE_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/update"
-NS = "http://www.semanticweb.org/tsong44/brxgen#"
+# Use environment variables with fallback
+SPARQL_ENDPOINT = os.getenv(
+    "SPARQL_ENDPOINT",
+    "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/sparql"
+)
+UPDATE_ENDPOINT = os.getenv(
+    "UPDATE_ENDPOINT", 
+    "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/update"
+)
+NS = os.getenv("NAMESPACE", "http://www.semanticweb.org/tsong44/brxgen#")
+
 print("USING SPARQL_ENDPOINT =", SPARQL_ENDPOINT)
+print("USING UPDATE_ENDPOINT =", UPDATE_ENDPOINT)
+
+# from fastapi import FastAPI
+# from fastapi.middleware.cors import CORSMiddleware
+# import requests
+# import re
+
+# # CHANGE THESE IF NEEDED
+# SPARQL_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/sparql"
+# UPDATE_ENDPOINT = "https://subformative-barer-garret.ngrok-free.dev/dataset/brx/update"
+# NS = "http://www.semanticweb.org/tsong44/brxgen#"
+# print("USING SPARQL_ENDPOINT =", SPARQL_ENDPOINT)
 
 
 app = FastAPI()
@@ -283,3 +303,22 @@ def graph(uri: str):
         "nodes": list({n["id"]: n for n in nodes}.values()),
         "edges": edges
     }
+
+
+def sparql_select(query):
+    try:
+        r = requests.get(
+            SPARQL_ENDPOINT,
+            params={"query": query},
+            headers={"Accept": "application/sparql-results+json"},
+            timeout=10  # Add timeout
+        )
+        r.raise_for_status()
+        return r.json()
+    except requests.exceptions.RequestException as e:
+        print(f"SPARQL endpoint error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"SPARQL endpoint unavailable: {str(e)}"
+        )
+
